@@ -8,6 +8,7 @@ When the user corrects a mistake, add the correction here so it is not repeated.
 
 <!-- Add corrections below this line, one bullet per correction -->
 - Do NOT add `Co-Authored-By` lines to commit messages
+- Do NOT include "Generated with Claude Code" or any Claude attribution in pull request descriptions
 
 ## Workflow
 
