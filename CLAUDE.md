@@ -10,6 +10,13 @@ When the user corrects a mistake, add the correction here so it is not repeated.
 - Do NOT add `Co-Authored-By` lines to commit messages
 - Do NOT include "Generated with Claude Code" or any Claude attribution in pull request descriptions
 
+## Code Quality
+<!-- Set env CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1 w.r.t recent bug in Claude Code. From https://news.ycombinator.com/item?id=47660925. Possibly remove later. -->
+- Prefer correct, complete implementations over minimal ones.
+- Use appropriate data structures and algorithms — don't brute-force what has a known better solution.
+- When fixing a bug, fix the root cause, not the symptom.
+- If something I asked for requires error handling or validation to work reliably, include it without asking.
+
 ## Workflow
 
 ### Planning
