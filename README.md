@@ -1,8 +1,49 @@
 # claude-personal-tools
 
-A collection of custom Claude Code skills and agents for independent code review, QA testing, plan critique, and code simplification.
+A collection of custom Claude Code md files, settings, skills, and agents for independent code review, QA testing, plan critique, and code simplification.
 
-## Overview
+## Repo contents
+
+| Path               | What it is                                                                      |
+| ------------------ | ------------------------------------------------------------------------------- |
+| `CLAUDE.md`        | Global Claude Code instructions — see [Configuration](#configuration)           |
+| `settings.json`    | Harness config: plugins, env, permissions — see [Configuration](#configuration) |
+| `skills/`          | 5 slash-command skills — see [Skills](#skills)                                  |
+| `agents/`          | 1 sandboxed subagent — see [Agents](#agents)                                    |
+
+## Configuration
+
+Two harness-level files live at the repo root. Unlike the skills and agents, these affect every Claude Code session once installed, not individual commands. But they can be adapted for per-project requirements.
+
+### CLAUDE.md
+
+Global instructions Claude Code reads on every session startup. Drop-in replacement for (or content to merge into) `~/.claude/CLAUDE.md`. Sections:
+
+- **Corrections Log** — running list of one-liners the user has had to correct so Claude stops repeating them
+- **Code Quality** — prefer complete implementations, use correct data structures, fix root causes, include error handling without being asked
+- **Workflow** — planning-mode gating for complex changes, author-critic review discipline, tests required alongside implementation
+- **Scientific Programming Standards** — reproducibility, numerical best practices, logging, project layout, data management, configuration management (geared toward Python / ML work, though most guidance is language-agnostic)
+- **Software Engineering Standards** — dependency pinning, secret hygiene, CI/CD, Docker, performance
+
+### settings.json
+
+Claude Code harness configuration. Drop-in replacement for (or content to merge into) `~/.claude/settings.json`.
+
+The `permissions` block is designed as a **safer substitute for `--dangerously-skip-permissions`**. This `settings.json` keeps the same ergonomic "don't ask me every time" feel by putting all the common tools (`Read`, `Edit`, `Write`, `Glob`, `Grep`, `Bash(*)`, `WebFetch`, `WebSearch`, `NotebookEdit`) in `allow`, but it still gates potentially important patterns behind `ask` so they require confirmation:
+
+- `Bash(rm -rf *)`, `rm -fr *`, `rm -r *`
+- `Bash(git commit *)`, `git push *`, `git reset --hard *`, `git rebase *`
+- `Bash(git clean *)`, `git branch -D *`, `git stash drop *`, `git stash clear`
+- `Bash(git checkout .)`, `git restore .`
+- `Bash(killall *)`, `docker rm *`, `docker rmi *`
+
+Other keys:
+
+- **`enabledPlugins`** — `code-review@claude-plugins-official` (Anthropic's code review plugin) and `codex@openai-codex` (OpenAI Codex CLI integration, registered via `extraKnownMarketplaces` from `github:openai/codex-plugin-cc`)
+- **`env`** — `CLAUDE_CODE_EFFORT_LEVEL=max` and `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1`. The latter is a temporary workaround for a regression in adaptive thinking (see [this thread](https://news.ycombinator.com/item?id=47660925)); remove it once the upstream fix lands
+- **`outputStyle`** — `explanatory`
+
+## Skills/Agents Overview
 
 These tools enforce an **author-critic separation** workflow: the session that writes code should never review it. A separate session runs these skills to provide genuinely independent feedback, avoiding the self-rationalization that happens when Claude reviews its own work in the same context.
 
@@ -61,7 +102,9 @@ A read-only agent with a hard tool restriction (`Read`, `Bash`, `Grep`, `Glob`).
 
 ## Installation
 
-Copy or symlink the contents into your Claude Code config directory:
+### Tools (skills and agents)
+
+These merge into `~/.claude/skills/` and `~/.claude/agents/` by directory name and are safe to copy blindly unless you already have a skill or agent of the same name.
 
 ```sh
 # Skills
@@ -73,8 +116,34 @@ cp -r agents/* ~/.claude/agents/
 
 Skills are discovered at **session startup** — start a new Claude Code session after installing for them to appear in `/` autocomplete.
 
+### Configuration (CLAUDE.md and settings.json)
+
+**Do not blind-copy these if you already have a `~/.claude/CLAUDE.md` or `~/.claude/settings.json`** — a plain `cp` will overwrite your existing config. Diff first and merge by hand:
+
+```sh
+diff ~/.claude/CLAUDE.md     CLAUDE.md
+diff ~/.claude/settings.json settings.json
+```
+
+If you don't already have these files (fresh Claude Code install), pick one of the two install modes:
+
+```sh
+# Option A — copy (independent of the repo after install)
+cp CLAUDE.md     ~/.claude/CLAUDE.md
+cp settings.json ~/.claude/settings.json
+
+# Option B — symlink (repo stays the source of truth; `git pull` updates your config)
+ln -s "$PWD/CLAUDE.md"     ~/.claude/CLAUDE.md
+ln -s "$PWD/settings.json" ~/.claude/settings.json
+```
+
+Merge notes:
+
+- **`CLAUDE.md`** — most sections (Code Quality, Workflow, Scientific Programming Standards, Software Engineering Standards) append cleanly; the Corrections Log is personal, merge entries individually.
+- **`settings.json`** — `enabledPlugins`, `extraKnownMarketplaces`, `env`, and `permissions.ask` all merge additively. Be deliberate about `permissions.allow` (widening it affects every session) and `skipDangerousModePermissionPrompt` (opts you out of the dangerous-mode warning entirely — only safe in combination with the full `ask` list from this repo).
+
 ## Notes
 
 - All skills are **project-agnostic** — they discover conventions from CLAUDE.md, README, CI config, and existing tests rather than assuming any specific project structure.
 - `/review` and `/simplify-code` run in the main context so you see edits in real-time.
-- The `instructions.md` file in `skills/` contains a detailed usage guide with examples and workflow recommendations.
+- `skills/README.md` has a longer usage guide with examples and workflow walkthroughs.
