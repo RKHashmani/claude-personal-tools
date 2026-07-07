@@ -9,6 +9,7 @@
 | `/qa [test-paths]` | Run tests, analyze failures, assess quality | Read, Bash, Grep, Glob | No (soft restriction) |
 | `/qa_subagent [test-paths]` | Same as `/qa` but hard-sandboxed via subagent | Agent → Read, Bash, Grep, Glob | No (hard restriction) |
 | `/simplify-code <files>` | Simplify code one edit at a time with safety guards | Read, Edit, Bash, Grep, Glob | Yes |
+| `/handoff` | Write `HANDOFF.md` so a fresh, zero-context session can resume the work | Read, Write, Bash, Grep, Glob | Yes (writes `HANDOFF.md`) |
 
 ### Direct Agent Invocation
 
@@ -68,6 +69,12 @@ Reads the plan, explores the codebase it targets, evaluates against 9 dimensions
 ```
 Discovers project conventions, identifies simplification opportunities, checks each against safety guards (never removes precision code, safety checks, seeded RNGs, etc.), then applies one small edit at a time — running tests and showing you each change for approval before proceeding.
 
+### Hand off a session
+```
+/handoff
+```
+Writes `HANDOFF.md` at the repo root: goal, current state (verified vs. unverified), key files, decisions made, open questions, ordered next steps, gotchas. Clear context, start a fresh session, and tell it to read `HANDOFF.md`. Claude also invokes this on its own (per the global CLAUDE.md) when it stops mid-task for your input.
+
 ## Skill Locations
 
 All skills are in `~/.claude/` (global, available across all projects):
@@ -78,12 +85,14 @@ All skills are in `~/.claude/` (global, available across all projects):
 ~/.claude/skills/qa/SKILL.md
 ~/.claude/skills/qa_subagent/SKILL.md
 ~/.claude/skills/simplify-code/SKILL.md
+~/.claude/skills/handoff/SKILL.md
 ~/.claude/agents/qa-tester.md
 ```
 
 ## Notes
 
 - Skills are discovered at **session startup**. If you create or edit a skill, start a new session for it to appear in `/` autocomplete.
+- `/handoff` is the only skill Claude may invoke on its own (it omits `disable-model-invocation: true`) — the global CLAUDE.md instructs Claude to run it when stopping for human input mid-task.
 - `/qa` uses `allowed-tools` to restrict editing (behavioral, soft). `/qa_subagent` delegates to an agent with a hard `tools:` restriction — the subagent physically cannot call Edit or Write.
 - `/review` and `/simplify-code` run in the main context (no fork) so you see edits in real-time and can approve each one.
 - All skills are project-agnostic — they discover conventions from CLAUDE.md, README, CI config, and existing tests rather than assuming any specific project structure.

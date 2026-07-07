@@ -1,6 +1,6 @@
 # claude-personal-tools
 
-A collection of custom Claude Code md files, settings, skills, and agents for independent code review, QA testing, plan critique, and code simplification.
+A collection of custom Claude Code md files, settings, skills, and agents for independent code review, QA testing, plan critique, code simplification, subagent orchestration, and session handoffs.
 
 ## Repo contents
 
@@ -8,7 +8,7 @@ A collection of custom Claude Code md files, settings, skills, and agents for in
 | ------------------ | ------------------------------------------------------------------------------- |
 | `CLAUDE.md`        | Global Claude Code instructions — see [Configuration](#configuration)           |
 | `settings.json`    | Harness config: plugins, env, permissions — see [Configuration](#configuration) |
-| `skills/`          | 5 slash-command skills — see [Skills](#skills)                                  |
+| `skills/`          | 6 slash-command skills — see [Skills](#skills)                                  |
 | `agents/`          | 1 sandboxed subagent — see [Agents](#agents)                                    |
 
 ## Configuration
@@ -20,10 +20,12 @@ Two harness-level files live at the repo root. Unlike the skills and agents, the
 Global instructions Claude Code reads on every session startup. Drop-in replacement for (or content to merge into) `~/.claude/CLAUDE.md`. Sections:
 
 - **Corrections Log** — running list of one-liners the user has had to correct so Claude stops repeating them
-- **Code Quality** — prefer complete implementations, use correct data structures, fix root causes, include error handling without being asked
+- **Code Quality** — use correct data structures, fix root causes, error handling for realistic failure modes, no commented-out behavior switches
 - **Workflow** — planning-mode gating for complex changes, author-critic review discipline, tests required alongside implementation
-- **Scientific Programming Standards** — reproducibility, numerical best practices, logging, project layout, data management, configuration management (geared toward Python / ML work, though most guidance is language-agnostic)
-- **Software Engineering Standards** — dependency pinning, secret hygiene, CI/CD, Docker, performance
+- **Subagents & Orchestration** — self-contained subagent briefs with an explicit mandate to be thorough and push back (even against the orchestrator), delegate only what you can evaluate, plans classify blocks `[subagent]`/`[main]`, automatic `HANDOFF.md` via `/handoff` when stopping for human input
+- **Scientific Programming (Python/ML projects)** — reproducibility (seeding, config-alongside-outputs), numerics (precision, guards, device/dtype propagation), invariant tests, logging
+- **Software Engineering Standards** — dependency pinning + lockfiles, no binaries/secrets in git, CI + pre-commit
+- **Karpathy-style** — think before coding, simplicity first, surgical changes, goal-driven execution
 
 ### settings.json
 
@@ -63,6 +65,7 @@ Session C (critic)  →  re-review if changes were significant
 | `/qa [test-paths]` | Run tests, analyze failures, assess test quality | No |
 | `/qa_subagent [test-paths]` | Same as `/qa` but hard-sandboxed via subagent (cannot edit files) | No |
 | `/simplify-code <files>` | Simplify code one edit at a time with safety guards and test validation | Yes |
+| `/handoff` | Write `HANDOFF.md` capturing session state so a fresh session can resume | Yes |
 
 ### `/review`
 
@@ -93,6 +96,12 @@ Independent QA testing. Discovers the test environment, runs the suite, classifi
 Methodical code simplification with safety guards. Identifies opportunities (extract duplication, replace manual implementations, reduce function length, remove dead code, etc.) while enforcing hard rules against removing precision code, safety checks, seeded RNGs, numerical tolerances, or diagnostic logging.
 
 Each simplification is applied one at a time: edit, run tests, show change, wait for approval.
+
+### `/handoff`
+
+Session handoff writer. Produces a `HANDOFF.md` at the repo root that a **fresh, zero-context session** can resume from: goal, current state (verified vs. unverified work), key files, decisions made, open questions, ordered next steps with verification checks, and gotchas.
+
+Unlike the other skills, `/handoff` is **model-invocable** (no `disable-model-invocation`): the CLAUDE.md orchestration rules tell Claude to invoke it on its own whenever it stops mid-task for human input or finishes a long autonomous stretch. Clearing context and resuming from `HANDOFF.md` in a new session is far cheaper than replaying a long conversation at uncached token prices. Never commit the generated file.
 
 ## Agents
 
@@ -139,7 +148,7 @@ ln -s "$PWD/settings.json" ~/.claude/settings.json
 
 Merge notes:
 
-- **`CLAUDE.md`** — most sections (Code Quality, Workflow, Scientific Programming Standards, Software Engineering Standards) append cleanly; the Corrections Log is personal, merge entries individually.
+- **`CLAUDE.md`** — most sections (Code Quality, Workflow, Scientific Programming, Software Engineering Standards, Karpathy-style) append cleanly; the Corrections Log is personal, merge entries individually. Subagents & Orchestration references `/handoff`, so install `skills/handoff/` alongside it.
 - **`settings.json`** — `enabledPlugins`, `extraKnownMarketplaces`, `env`, and `permissions.ask` all merge additively. Be deliberate about `permissions.allow` (widening it affects every session) and `skipDangerousModePermissionPrompt` (opts you out of the dangerous-mode warning entirely — only safe in combination with the full `ask` list from this repo).
 
 ## Notes
