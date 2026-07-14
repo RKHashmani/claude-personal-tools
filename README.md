@@ -1,6 +1,8 @@
 # claude-personal-tools
 
-A collection of custom Claude Code md files, settings, skills, and agents for independent code review, QA testing, plan critique, code simplification, subagent orchestration, and session handoffs.
+A collection of custom Claude Code and Codex instructions, settings, skills, and agents for independent code review, QA testing, plan critique, code simplification, subagent orchestration, and session handoffs.
+
+Codex equivalents can be found under [`codex/`](codex/); see its [README](codex/README.md) for Codex-specific setup and installation.
 
 ## Repo contents
 
@@ -10,6 +12,7 @@ A collection of custom Claude Code md files, settings, skills, and agents for in
 | `settings.json`    | Harness config: plugins, env, permissions — see [Configuration](#configuration) |
 | `skills/`          | 6 slash-command skills — see [Skills](#skills)                                  |
 | `agents/`          | 1 sandboxed subagent — see [Agents](#agents)                                    |
+| `codex/`           | Codex equivalents — see the [Codex README](codex/README.md)                     |
 
 ## Configuration
 

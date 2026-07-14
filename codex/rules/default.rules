@@ -1,0 +1,18 @@
+# Mirrored from settings.json: routine work uses the claude-auto permission
+# profile, while destructive and publishing commands remain interactive.
+prefix_rule(pattern=["rm", "-rf"], decision="prompt", justification="Confirm recursive forced deletion")
+prefix_rule(pattern=["rm", "-fr"], decision="prompt", justification="Confirm recursive forced deletion")
+prefix_rule(pattern=["rm", "-r"], decision="prompt", justification="Confirm recursive deletion")
+prefix_rule(pattern=["git", "commit"], decision="prompt", justification="Confirm creation of a Git commit")
+prefix_rule(pattern=["git", "push"], decision="prompt", justification="Confirm publishing Git changes")
+prefix_rule(pattern=["git", "reset", "--hard"], decision="prompt", justification="Confirm destructive Git reset")
+prefix_rule(pattern=["git", "clean"], decision="prompt", justification="Confirm removal of untracked files")
+prefix_rule(pattern=["git", "branch", "-D"], decision="prompt", justification="Confirm forced branch deletion")
+prefix_rule(pattern=["git", "rebase"], decision="prompt", justification="Confirm Git history rewrite")
+prefix_rule(pattern=["git", "stash", "drop"], decision="prompt", justification="Confirm stash deletion")
+prefix_rule(pattern=["git", "stash", "clear"], decision="prompt", justification="Confirm deletion of all stashes")
+prefix_rule(pattern=["git", "checkout", "."], decision="prompt", justification="Confirm discarding working-tree changes")
+prefix_rule(pattern=["git", "restore", "."], decision="prompt", justification="Confirm discarding working-tree changes")
+prefix_rule(pattern=["killall"], decision="prompt", justification="Confirm terminating processes")
+prefix_rule(pattern=["docker", "rm"], decision="prompt", justification="Confirm container deletion")
+prefix_rule(pattern=["docker", "rmi"], decision="prompt", justification="Confirm image deletion")

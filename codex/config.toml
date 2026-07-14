@@ -1,0 +1,17 @@
+# Claude-like automatic access without disabling Codex's sandbox or approvals.
+approval_policy = "on-request"
+default_permissions = "claude-auto"
+web_search = "live"
+
+[permissions.claude-auto]
+description = "Claude-like automatic access: global reads, workspace writes, and public network access"
+extends = ":workspace"
+
+[permissions.claude-auto.filesystem]
+":root" = "read"
+
+[permissions.claude-auto.network]
+enabled = true
+
+[permissions.claude-auto.network.domains]
+"*" = "allow"

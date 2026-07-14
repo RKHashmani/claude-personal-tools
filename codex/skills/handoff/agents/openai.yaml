@@ -1,0 +1,7 @@
+interface:
+  display_name: "Session Handoff"
+  short_description: "Capture resumable state in HANDOFF.md"
+  default_prompt: "Use $handoff to capture the current session state in HANDOFF.md for a fresh Codex session."
+
+policy:
+  allow_implicit_invocation: true
