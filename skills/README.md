@@ -10,6 +10,7 @@
 | `/qa_subagent [test-paths]` | Same as `/qa` but hard-sandboxed via subagent | Agent → Read, Bash, Grep, Glob | No (hard restriction) |
 | `/simplify-code <files>` | Simplify code one edit at a time with safety guards | Read, Edit, Bash, Grep, Glob | Yes |
 | `/handoff` | Write `HANDOFF.md` so a fresh, zero-context session can resume the work | Read, Write, Bash, Grep, Glob | Yes (writes `HANDOFF.md`) |
+| `/asd-ste100-rewrite [target]` | Rewrite comments and docstrings into plain English, batch-previewed | Read, Edit, Grep, Glob, Bash | Yes (comment text only) |
 
 ### Direct Agent Invocation
 
@@ -75,6 +76,14 @@ Discovers project conventions, identifies simplification opportunities, checks e
 ```
 Writes `HANDOFF.md` at the repo root: goal, current state (verified vs. unverified), key files, decisions made, open questions, ordered next steps, gotchas. Clear context, start a fresh session, and tell it to read `HANDOFF.md`. Claude also invokes this on its own (per the global CLAUDE.md) when it stops mid-task for your input.
 
+### Rewrite comments into plain English
+```
+/asd-ste100-rewrite                                    # uncommitted changes, .md dropped
+/asd-ste100-rewrite src/loader/cache.py                # every comment in one file
+/asd-ste100-rewrite pr_fix-parabola_draft.md           # naming a .md path opts it in
+```
+Applies Orwell's six rules and the ASD-STE100 baseline to comments and docstrings already on disk, which the `orwell-explanatory` output style cannot reach. It also strips em dashes, replacing each with a comma, a semicolon, parentheses, or the `--` double hyphen, which it never targets itself. The no-argument run reads both `git diff --name-only HEAD` and `git ls-files --others --exclude-standard`, so it sees staged, unstaged, and untracked work. It reports how many Markdown paths it dropped so you can name one.
+
 ## Skill Locations
 
 All skills are in `~/.claude/` (global, available across all projects):
@@ -86,13 +95,14 @@ All skills are in `~/.claude/` (global, available across all projects):
 ~/.claude/skills/qa_subagent/SKILL.md
 ~/.claude/skills/simplify-code/SKILL.md
 ~/.claude/skills/handoff/SKILL.md
+~/.claude/skills/asd-ste100-rewrite/SKILL.md
 ~/.claude/agents/qa-tester.md
 ```
 
 ## Notes
 
 - Skills are discovered at **session startup**. If you create or edit a skill, start a new session for it to appear in `/` autocomplete.
-- `/handoff` is the only skill Claude may invoke on its own (it omits `disable-model-invocation: true`) — the global CLAUDE.md instructs Claude to run it when stopping for human input mid-task.
+- `/handoff` and `/asd-ste100-rewrite` may be invoked by Claude on its own (they omit `disable-model-invocation: true`). The global CLAUDE.md instructs Claude to run `/handoff` when stopping for human input mid-task. `/asd-ste100-rewrite` is matched from its `description`, so a request to plain-English some comments can trigger it without the slash command.
 - `/qa` uses `allowed-tools` to restrict editing (behavioral, soft). `/qa_subagent` delegates to an agent with a hard `tools:` restriction — the subagent physically cannot call Edit or Write.
 - `/review` and `/simplify-code` run in the main context (no fork) so you see edits in real-time and can approve each one.
 - All skills are project-agnostic — they discover conventions from CLAUDE.md, README, CI config, and existing tests rather than assuming any specific project structure.

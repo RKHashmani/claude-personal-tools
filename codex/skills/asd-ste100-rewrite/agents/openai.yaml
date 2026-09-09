@@ -1,0 +1,4 @@
+interface:
+  display_name: "ASD-STE100 Rewriter"
+  short_description: "Rewrite comments and docstrings in plain English"
+  default_prompt: "Use $asd-ste100-rewrite to simplify comments and docstrings while preserving every technical fact."

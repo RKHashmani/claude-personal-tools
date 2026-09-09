@@ -1,6 +1,6 @@
 # claude-personal-tools
 
-A collection of custom Claude Code and Codex instructions, settings, skills, and agents for independent code review, QA testing, plan critique, code simplification, subagent orchestration, and session handoffs.
+A collection of custom Claude Code and Codex instructions, settings, skills, and agents for independent code review, QA testing, plan critique, code simplification, comment rewriting, subagent orchestration, and session handoffs.
 
 Codex equivalents can be found under [`codex/`](codex/); see its [README](codex/README.md) for Codex-specific setup and installation.
 
@@ -10,7 +10,7 @@ Codex equivalents can be found under [`codex/`](codex/); see its [README](codex/
 | ------------------ | ------------------------------------------------------------------------------- |
 | `CLAUDE.md`        | Global Claude Code instructions — see [Configuration](#configuration)           |
 | `settings.json`    | Harness config: plugins, env, permissions — see [Configuration](#configuration) |
-| `skills/`          | 6 slash-command skills — see [Skills](#skills)                                  |
+| `skills/`          | 7 slash-command skills — see [Skills](#skills)                                  |
 | `agents/`          | 1 sandboxed subagent — see [Agents](#agents)                                    |
 | `codex/`           | Codex equivalents — see the [Codex README](codex/README.md)                     |
 
@@ -69,6 +69,7 @@ Session C (critic)  →  re-review if changes were significant
 | `/qa_subagent [test-paths]` | Same as `/qa` but hard-sandboxed via subagent (cannot edit files) | No |
 | `/simplify-code <files>` | Simplify code one edit at a time with safety guards and test validation | Yes |
 | `/handoff` | Write `HANDOFF.md` capturing session state so a fresh session can resume | Yes |
+| `/asd-ste100-rewrite [target]` | Rewrite comments and docstrings into plain English, batch-previewed | Yes (comment text only) |
 
 ### `/review`
 
@@ -104,7 +105,17 @@ Each simplification is applied one at a time: edit, run tests, show change, wait
 
 Session handoff writer. Produces a `HANDOFF.md` at the repo root that a **fresh, zero-context session** can resume from: goal, current state (verified vs. unverified work), key files, decisions made, open questions, ordered next steps with verification checks, and gotchas.
 
-Unlike the other skills, `/handoff` is **model-invocable** (no `disable-model-invocation`): the CLAUDE.md orchestration rules tell Claude to invoke it on its own whenever it stops mid-task for human input or finishes a long autonomous stretch. Clearing context and resuming from `HANDOFF.md` in a new session is far cheaper than replaying a long conversation at uncached token prices. Never commit the generated file.
+`/handoff` and `/asd-ste100-rewrite` are the **model-invocable** skills here (no `disable-model-invocation`); the rest wait for you to type them. For `/handoff`, the CLAUDE.md orchestration rules tell Claude to invoke it on its own whenever it stops mid-task for human input or finishes a long autonomous stretch. Clearing context and resuming from `HANDOFF.md` in a new session is far cheaper than replaying a long conversation at uncached token prices. Never commit the generated file.
+
+### `/asd-ste100-rewrite`
+
+Plain-English comment rewriter, and the on-demand counterpart to the `orwell-explanatory` output style described above. The style shapes text Claude is about to write, so it never reaches comments already on disk. This skill applies the same two rule sets, Orwell's six rules and the ASD-STE100 baseline, to comments and docstrings that already exist.
+
+With no argument it targets the uncommitted changed files, tracked and untracked, and drops every `.md` path. Markdown enters scope only when you name the path or ask for it, which lets it clean up a `pr_<branch>_draft.md` from `/draft-pr-issue` without touching `README.md` on an ordinary run.
+
+Two carve-outs keep the rules from damaging code. Orwell's fifth rule (avoid the jargon word) yields to the STE rule demanding the exact technical term, so it applies to ordinary prose and never to the vocabulary of the domain. On top of the style's verbatim exemptions, the skill leaves NumPy docstring sections, single-letter math variables matching paper notation, PEP 257 summary lines, and short Latin tags such as `e.g.` alone.
+
+On top of the two rule sets it strips em dashes, replacing each with a comma, a semicolon, parentheses, the `--` double hyphen, or two sentences. The double hyphen itself is never a target, so command flags, section dividers, and the house dash convention all survive. It holds itself to the rule too, in its own preview and report. Like `/rephrase-comments`, it never changes code and applies its batch only after one approval.
 
 ## Agents
 
