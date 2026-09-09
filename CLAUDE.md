@@ -8,6 +8,7 @@ When the user corrects a mistake, add the correction here so it is not repeated.
 
 <!-- Add corrections below this line, one bullet per correction -->
 - Do NOT add `Co-Authored-By` lines to commit messages
+- Do NOT write long commit messages. Keep them to a short subject line (e.g., one line, no body paragraphs) with no prefix (e.g., `feat:`, `fix:`, `docs:`).
 - Do NOT include "Generated with Claude Code" or any Claude attribution in pull request descriptions
 
 ## Code Quality
